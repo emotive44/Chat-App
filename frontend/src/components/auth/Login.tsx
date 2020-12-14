@@ -1,28 +1,14 @@
 import React, { FC } from 'react'
-import { Link } from 'react-router-dom';
-import './Login.css';
+import './Form.css';
+
+import InputGroup from '../common/InputGroup';
 
 const Login: FC = () => {
   return (
-    <section className="login">
-      <div>
-        <label htmlFor="name">Your Name</label>
-        <input type="text" id="name" name="name" />
-      </div>
-      <div>
-        <label htmlFor="email">Your Email</label>
-        <input type="text" id="email" name="email" />
-      </div>
-      <div>
-        <label htmlFor="password">Your Password</label>
-        <input type="password" id="password" name="password" />
-      </div>
-      <button>Register</button>
-      <p>
-        <Link to='/register'>
-          If you have account go to Login.
-        </Link>
-      </p>
+    <section className="form-wrapper">
+      <InputGroup label='Email' type='text' />
+      <InputGroup label='Password' type='password' />
+      <button>Login</button>
     </section>
   )
 }

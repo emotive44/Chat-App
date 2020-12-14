@@ -1,38 +1,39 @@
-.login { 
+.form-wrapper { 
   width: 50rem;
-  height: 29rem;
+  height: 20rem;
   margin: 5rem auto;
   border: 1px solid black;
 }
 
-.login div:first-child {
+.form-wrapper div:first-child {
   margin-top: 2rem;
 }
 
-.login div {
+.form-wrapper div {
   width: 50%;
   margin: 1rem auto;
 }
 
-.login label,
-.login input {
+.form-wrapper label,
+.form-wrapper input {
   width: 100%;
 }
 
-.login label {
-  cursor: pointer;
-}
-
-.login button {
+.form-wrapper button {
   width: 40%;
   display: block;
   margin: 2rem auto;
   padding: 0.5rem;
 }
 
-.login p {
+.form-wrapper p {
   width: 46%;
   margin: 0 auto;
   text-align: center;
   border-bottom: 1px solid black;
+}
+
+a.active {
+  padding-bottom: 0.4rem;
+  border-bottom: 4px solid black;
 }
