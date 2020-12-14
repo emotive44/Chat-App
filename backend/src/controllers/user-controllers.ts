@@ -43,4 +43,39 @@ const register = async (
   });
 };
 
-export { register };
+const login = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<TResponse> => {
+  const { email, password } = req.body as IUser;
+
+  let existUser: IUser | null;
+  try {
+    existUser = await User.findOne({ email });
+  } catch (err) {
+    return next(new HttpError('Login failed, please try again.', 500));
+  }
+
+  if (!existUser) {
+    return next(new HttpError('Invalid email or password, login failed.', 401));
+  }
+
+  let isValidPass = false;
+  try {
+    isValidPass = await existUser.comparePassword(password);
+  } catch (err) {
+    return next(new HttpError('Login failed, please try again.', 500));
+  }
+
+  if (!isValidPass) {
+    return next(new HttpError('Invalid email or password, login failed.', 401));
+  }
+
+  res.status(200).json({
+    userId: existUser.id,
+    name: existUser.name,
+  });
+};
+
+export { register, login };
