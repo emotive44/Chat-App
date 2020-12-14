@@ -1,0 +1,38 @@
+.login { 
+  width: 50rem;
+  height: 29rem;
+  margin: 5rem auto;
+  border: 1px solid black;
+}
+
+.login div:first-child {
+  margin-top: 2rem;
+}
+
+.login div {
+  width: 50%;
+  margin: 1rem auto;
+}
+
+.login label,
+.login input {
+  width: 100%;
+}
+
+.login label {
+  cursor: pointer;
+}
+
+.login button {
+  width: 40%;
+  display: block;
+  margin: 2rem auto;
+  padding: 0.5rem;
+}
+
+.login p {
+  width: 46%;
+  margin: 0 auto;
+  text-align: center;
+  border-bottom: 1px solid black;
+}
