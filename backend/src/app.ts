@@ -12,9 +12,6 @@ const app: Application = express();
 
 app.use(bodyParser.json());
 
-// express middlewares for routes
-app.use('/api/v1/users/', userRoutes);
-
 // express middleware for implement CORS
 app.use((_, res: Response, next: NextFunction) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -28,6 +25,9 @@ app.use((_, res: Response, next: NextFunction) => {
   );
   next();
 });
+
+// express middlewares for routes
+app.use('/api/v1/users/', userRoutes);
 
 // express middlewares for Errors
 app.use((req: Request, res: Response, next: NextFunction) => {

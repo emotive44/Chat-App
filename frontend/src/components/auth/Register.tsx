@@ -1,15 +1,28 @@
 import React, { FC, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useHistory, Redirect } from 'react-router-dom';
 import './Form.css';
 
+import axios from 'axios';
+import setStorage from '../../utils/setStorage';
 import InputGroup from '../common/InputGroup';
 
-const Register:FC = () => {
+
+interface RegisterProps {
+  loginHandler(x: boolean):void;
+  isAuth: boolean;
+}
+
+const Register:FC<RegisterProps> = ({ loginHandler, isAuth }) => {
+  const history = useHistory();
   const [state, setState] = useState({
     name: '',
     email: '',
     password: '',
   });
+
+  if(isAuth) {
+    return <Redirect to='/' />
+  }
 
   const inputChangeHandler = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value, name } = e.target;
@@ -20,8 +33,17 @@ const Register:FC = () => {
     }))
   }
 
-  const submitHandler = () => {
-    console.log(state);
+  const submitHandler = async () => {
+    try {
+      const res = await axios.post(
+        'http://localhost:5000/api/v1/users/register',
+        JSON.stringify(state),
+      );
+
+      setStorage(res.data);
+      loginHandler(true);
+      history.push('/')
+    } catch (err) {}
   }
 
   return (
