@@ -1,7 +1,10 @@
 import express, { Application, Request, Response, NextFunction } from 'express';
+import { Server } from 'http';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import { config } from 'dotenv';
+
+import createSocket from './sockets';
 
 import userRoutes from './routes/user-routes';
 import HttpError from './models/httpErr-model';
@@ -9,6 +12,15 @@ import HttpError from './models/httpErr-model';
 config();
 const port: number = 5000;
 const app: Application = express();
+
+// create http server
+const server: Server = new Server(app);
+
+// create connection with socket.io
+createSocket(server);
+
+// start server on port 5000;
+server.listen(5000);
 
 app.use(bodyParser.json());
 
@@ -48,7 +60,7 @@ mongoose
     }
   )
   .then(() => {
-    app.listen(port, () => console.log(`Running on port ${port}`));
+    console.log(`Running on port ${port}`);
   })
   .catch((err) => {
     console.error(err);

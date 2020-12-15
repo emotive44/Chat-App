@@ -34,3 +34,8 @@ main {
   height: 10rem;
   overflow-y: auto;
 }
+
+.public-chat__comments .bold {
+  font-style: italic;
+  font-weight: 500;
+}
