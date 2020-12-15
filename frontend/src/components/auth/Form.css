@@ -5,20 +5,6 @@
   border: 1px solid black;
 }
 
-.form-wrapper div:first-child {
-  margin-top: 2rem;
-}
-
-.form-wrapper div {
-  width: 50%;
-  margin: 1rem auto;
-}
-
-.form-wrapper label,
-.form-wrapper input {
-  width: 100%;
-}
-
 .form-wrapper button {
   width: 40%;
   display: block;
@@ -31,9 +17,4 @@
   margin: 0 auto;
   text-align: center;
   border-bottom: 1px solid black;
-}
-
-a.active {
-  padding-bottom: 0.4rem;
-  border-bottom: 4px solid black;
 }

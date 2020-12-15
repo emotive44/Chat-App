@@ -1,0 +1,36 @@
+.online-users p{ 
+  width: 15rem;
+  margin-left: auto;
+}
+
+main { 
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.public-chat {
+  border: 1px solid black;
+  margin-left: 15rem;
+  width: 40%;
+  height: 17rem;
+}
+
+.public-chat__title {
+  width: 50%;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.public-chat__form { 
+  display: flex;
+  width: 95%;
+  justify-content: space-between;
+  margin: 1rem auto;
+}
+
+.public-chat__comments {
+  margin-left: 0.5rem;
+  height: 10rem;
+  overflow-y: auto;
+}

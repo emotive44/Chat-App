@@ -1,5 +1,5 @@
 import React, { FC } from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, Link } from 'react-router-dom';
 import './Navbar.css';
 
 interface NavbarProps {
@@ -13,7 +13,7 @@ const Navbar: FC<NavbarProps> = ({ logoutHandler, isAuth }) => {
     logoutHandler();
   }
 
-  const ulStyles = isAuth ? {'width': '27rem'} : {};
+  const ulStyles = isAuth ? {'width': '32rem'} : {};
   const userName = localStorage.getItem('uname');
 
   return (
@@ -28,8 +28,9 @@ const Navbar: FC<NavbarProps> = ({ logoutHandler, isAuth }) => {
 
         {isAuth && (
           <>
-            <li>Hello, {userName}!</li>
-            <li><NavLink exact to='/' onClick={logout}>Logout</NavLink></li>
+            <li><NavLink exact to='/' >Home</NavLink></li>
+            <li><Link to='/' onClick={logout}>Logout</Link></li>
+            <li style={{ cursor: 'default', fontWeight: 'bold' }} >Hello, {userName}!</li>
           </>
         )}
       </ul>

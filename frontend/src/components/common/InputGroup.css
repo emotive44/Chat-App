@@ -1,0 +1,11 @@
+.input-group {
+  width: 50%;
+  margin: 1rem auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.input-group label,
+.form-wrapper input {
+  width: 100%;
+}

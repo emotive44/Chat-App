@@ -68,7 +68,7 @@ const Register:FC<RegisterProps> = ({ loginHandler, isAuth }) => {
       />
       <button onClick={submitHandler}>Register</button>
       <p>
-        <Link to='/register'>
+        <Link to='/login'>
           If you have account go to Login.
         </Link>
       </p>
