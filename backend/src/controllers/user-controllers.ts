@@ -78,4 +78,28 @@ const login = async (
   });
 };
 
-export { register, login };
+const getAllUsers = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+): Promise<TResponse> => {
+  let users: IUser[];
+  try {
+    users = await User.find().select('_id name');
+  } catch (err) {
+    return next(new HttpError('Fetching users failed, please try again.', 500));
+  }
+
+  if (users.length < 1) {
+    return next(
+      new HttpError(
+        'Sorry, user with this name was not found, please try with other name.',
+        404
+      )
+    );
+  }
+
+  res.status(200).json(users);
+};
+
+export { register, login, getAllUsers };

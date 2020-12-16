@@ -1,0 +1,22 @@
+.user-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 1.5rem;
+}
+
+.user-item span {
+  width: 12rem;
+  cursor: pointer;
+}
+
+.user-item small {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: red;
+  align-self: center;
+}
+
+.user-item small.online {
+  background: green;
+}

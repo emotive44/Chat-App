@@ -1,7 +1,10 @@
 import React, { FC, useState, useEffect } from 'react';
 import { Redirect } from 'react-router-dom';
+import axios from 'axios';
 import socket from '../../utils/socketConnection';
 import './Home.css';
+
+import UserItem, { UserItemProps } from './UserItem';
 
 
 interface IMsg {
@@ -18,6 +21,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const [msg, setMsg] = useState('');
   const [fullMsg, setFullMsg] = useState<IMsg>();
   const [onlineUsers, setOnlineUsers] = useState(0);
+  const [users, setUsers] = useState<UserItemProps[]>([]);
  
   //                             always will scroll to bottom                       //
   useEffect(() => {   
@@ -27,7 +31,24 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     }
   });
 
+  // get all users from BE
+  useEffect(() => {
+    let isSubscribed = true;
+    const getUsers = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/v1/users');
+        isSubscribed && setUsers(res.data as UserItemProps[]);
+      } catch (err) {}
+    }
+    getUsers();
+
+    return () => {
+      isSubscribed = false;
+    }
+  }, []);
+
   
+  // useeffect for all sockets subscriptions
   useEffect(() => {
     // if user is already logged in or registered and refresh page, will continue be online
     if(localStorage.getItem('uname')) {
@@ -112,6 +133,12 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
             })}
           </div>
         </section>
+
+        <aside className="users">
+          {users.map(user => {
+            return <UserItem name={user.name} _id={user._id} key={user._id} />
+          })}
+        </aside>
       </main>
     </>
   )
