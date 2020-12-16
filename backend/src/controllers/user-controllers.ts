@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from 'express';
 import User, { IUser } from '../models/user-model';
+import { ObjectId } from 'mongoose';
 
 import HttpError from '../models/httpErr-model';
 
@@ -29,6 +30,7 @@ const register = async (
     name,
     email,
     password,
+    isOnline: true,
   });
 
   try {
@@ -85,7 +87,7 @@ const getAllUsers = async (
 ): Promise<TResponse> => {
   let users: IUser[];
   try {
-    users = await User.find().select('_id name');
+    users = await User.find().select('_id name isOnline');
   } catch (err) {
     return next(new HttpError('Fetching users failed, please try again.', 500));
   }
@@ -102,4 +104,23 @@ const getAllUsers = async (
   res.status(200).json(users);
 };
 
-export { register, login, getAllUsers };
+const userStatus = async (userId: ObjectId, status: string): Promise<void> => {
+  let user;
+  try {
+    user = await User.findById(userId);
+  } catch (err) {
+    console.error(err);
+  }
+
+  if (user) {
+    status === 'connect' ? (user.isOnline = true) : (user.isOnline = false);
+
+    try {
+      await user.save();
+    } catch (err) {
+      console.error(err);
+    }
+  }
+};
+
+export { register, login, getAllUsers, userStatus };

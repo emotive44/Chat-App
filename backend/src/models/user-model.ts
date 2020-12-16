@@ -5,6 +5,7 @@ export interface IUser extends Document {
   name: string;
   email: string;
   password: string;
+  isOnline: boolean;
   comparePassword(password: string): boolean;
 }
 
@@ -12,6 +13,7 @@ const userSchema: Schema = new mongoose.Schema({
   name: { type: String, required: true },
   email: { type: String, required: true, unique: true },
   password: { type: String, required: true },
+  isOnline: { type: Boolean, default: false, required: true },
 });
 
 userSchema.pre<IUser>('save', async function (next) {

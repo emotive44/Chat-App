@@ -42,6 +42,7 @@ const Register:FC<RegisterProps> = ({ loginHandler, isAuth }) => {
       );
 
       socket.emit('someone connect');
+      socket.emit('hi');
       setStorage(res.data);
       loginHandler(true);
       history.push('/')

@@ -23,6 +23,22 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [users, setUsers] = useState<UserItemProps[]>([]);
  
+  // fetch all users from BE
+  const getUsers = async () => {
+    try {
+      const res = await axios.get('http://localhost:5000/api/v1/users');
+      let fetchedUsers = res.data as UserItemProps[];
+      fetchedUsers = fetchedUsers.map(user => {
+        if(user._id === localStorage.getItem('uid')) {
+          user.isOnline = true;
+        }
+        return user;
+      });
+
+      setUsers(fetchedUsers);
+    } catch (err) {}
+  }
+
   //                             always will scroll to bottom                       //
   useEffect(() => {   
     const objDiv = document.querySelector(".public-chat__comments");
@@ -31,25 +47,10 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     }
   });
 
-  // get all users from BE
-  useEffect(() => {
-    let isSubscribed = true;
-    const getUsers = async () => {
-      try {
-        const res = await axios.get('http://localhost:5000/api/v1/users');
-        isSubscribed && setUsers(res.data as UserItemProps[]);
-      } catch (err) {}
-    }
-    getUsers();
-
-    return () => {
-      isSubscribed = false;
-    }
-  }, []);
-
-  
   // useeffect for all sockets subscriptions
   useEffect(() => {
+    getUsers();
+
     // if user is already logged in or registered and refresh page, will continue be online
     if(localStorage.getItem('uname')) {
       socket.emit('hi');
@@ -64,8 +65,9 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     socket.on('hi', joinedUserListener);
 
     // get count of online users
-    const onlineUsersListener = (users: number) => {
-      setOnlineUsers(users);
+    const onlineUsersListener = (onlineUsers: number) => {
+      getUsers(); // when somebody connected, make request to get users with new status
+      setOnlineUsers(onlineUsers);
     }
     socket.on('online users', onlineUsersListener);
   
@@ -76,6 +78,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     socket.on('public msg', publicMsgListener);
 
     const userLeftListener = (username: string) => {
+      getUsers(); // when somebody disconnected, make request to get users with new status
       setMessages(prev => [...prev, { text: `${username} left!`}]);
     }
     socket.on('someone left', userLeftListener);
@@ -136,7 +139,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
 
         <aside className="users">
           {users.map(user => {
-            return <UserItem name={user.name} _id={user._id} key={user._id} />
+            return <UserItem name={user.name} _id={user._id} isOnline={user.isOnline} key={user._id} />
           })}
         </aside>
       </main>
