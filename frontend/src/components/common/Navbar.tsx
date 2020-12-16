@@ -2,6 +2,9 @@ import React, { FC } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import './Navbar.css';
 
+import socket from '../../utils/socketConnection';
+
+
 interface NavbarProps {
   isAuth: boolean;
   logoutHandler(): void;
@@ -9,6 +12,7 @@ interface NavbarProps {
 
 const Navbar: FC<NavbarProps> = ({ logoutHandler, isAuth }) => {
   const logout = () => {
+    socket.emit('logout');
     localStorage.clear();
     logoutHandler();
   }

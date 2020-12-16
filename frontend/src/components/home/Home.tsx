@@ -17,7 +17,8 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const [messages, setMessages] = useState<IMsg[]>([]);
   const [msg, setMsg] = useState('');
   const [fullMsg, setFullMsg] = useState<IMsg>();
-  
+  const [onlineUsers, setOnlineUsers] = useState(0);
+ 
   //                             always will scroll to bottom                       //
   useEffect(() => {   
     const objDiv = document.querySelector(".public-chat__comments");
@@ -28,20 +29,42 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
 
   
   useEffect(() => {
+    // if user is already logged in or registered and refresh page, will continue be online
+    if(localStorage.getItem('uname')) {
+      socket.emit('hi');
+      socket.emit('someone connect');
+    }
+
+    // we create separate listener functions, because we want cleanup after leave page !!!!
     // notify other people that you are joined.
-    socket.on('hi', (msg: string) => {
-      setMessages(prev => [...prev, { text: `${msg} is joined!`}])
-    });
+    const joinedUserListener = (username: string) => {
+      setMessages(prev => [...prev, { text: `${username} is joined!`}]);
+    }
+    socket.on('hi', joinedUserListener);
+
+    // get count of online users
+    const onlineUsersListener = (users: number) => {
+      setOnlineUsers(users);
+    }
+    socket.on('online users', onlineUsersListener);
   
     // send message to other, who are joined.
-    socket.on('msg', (msg: IMsg) => {
+    const publicMsgListener = (msg: IMsg) => {
       setMessages(prev => [...prev, { userName: msg.userName, text: msg.text}])
-    });
+    }
+    socket.on('public msg', publicMsgListener);
+
+    const userLeftListener = (username: string) => {
+      setMessages(prev => [...prev, { text: `${username} left!`}]);
+    }
+    socket.on('someone left', userLeftListener);
     
     // remove subscrioptions when left home page.
     return () => {
-      socket.off('msg');
-      socket.off('hi');
+      socket.off('hi', joinedUserListener);
+      socket.off('online users', onlineUsersListener);
+      socket.off('public msg', publicMsgListener);
+      socket.off('someone left', userLeftListener);
     }
   }, []);
   
@@ -50,7 +73,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   }
 
   const publicComment = () => {
-    socket.emit('msg', fullMsg); // send full message 
+    socket.emit('public msg', fullMsg); // send full message 
     setMsg('');
   } 
 
@@ -69,7 +92,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   return (
     <>
       <div className="online-users">
-        <p>Online Users: 123</p>
+        <p>Online Users: {onlineUsers}</p>
       </div>
 
       <main>

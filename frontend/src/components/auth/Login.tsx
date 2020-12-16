@@ -5,7 +5,7 @@ import './Form.css';
 import axios from 'axios';
 import InputGroup from '../common/InputGroup';
 import setStorage from '../../utils/setStorage';
-
+import socket from '../../utils/socketConnection';
 
 interface LoginProps {
   loginHandler(x: boolean):void;
@@ -40,6 +40,8 @@ const Login: FC<LoginProps> = ({ loginHandler, isAuth }) => {
         JSON.stringify(state),
       );
 
+      socket.emit('someone connect');
+      socket.emit('hi')
       setStorage(res.data);  
       loginHandler(true);
       history.push('/');

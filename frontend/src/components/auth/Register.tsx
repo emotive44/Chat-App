@@ -5,6 +5,7 @@ import './Form.css';
 import axios from 'axios';
 import setStorage from '../../utils/setStorage';
 import InputGroup from '../common/InputGroup';
+import socket from '../../utils/socketConnection';
 
 
 interface RegisterProps {
@@ -40,6 +41,7 @@ const Register:FC<RegisterProps> = ({ loginHandler, isAuth }) => {
         JSON.stringify(state),
       );
 
+      socket.emit('someone connect');
       setStorage(res.data);
       loginHandler(true);
       history.push('/')
