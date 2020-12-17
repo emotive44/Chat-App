@@ -5,6 +5,7 @@ import socket from '../../utils/socketConnection';
 import './Home.css';
 
 import UserItem, { UserItemProps } from './UserItem';
+import PrivateChat from './PrivateChat';
 
 
 interface IMsg {
@@ -22,6 +23,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const [fullMsg, setFullMsg] = useState<IMsg>();
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [users, setUsers] = useState<UserItemProps[]>([]);
+  const [currUsers, setCurrUsers] = useState<string[]>([]);
  
   // fetch all users from BE
   const getUsers = async () => {
@@ -99,6 +101,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const publicComment = () => {
     socket.emit('public msg', fullMsg); // send full message 
     setMsg('');
+    setFullMsg({} as IMsg);
   } 
 
   // create full message
@@ -112,6 +115,21 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
       setFullMsg({ userName, text });
     }
   }
+
+  // set all users with who write private messages
+  const currentUsersHandler = (userName: string) => {
+    // check if chat with current user is already open!!!!
+    if(currUsers.includes(userName)) {
+      return;
+    }
+    setCurrUsers(prev => [...prev, userName]);
+  }
+
+  const closePrivateChat = (userName: string) => {
+    const privateChatsUsers = currUsers.filter(user => user !== userName);
+    setCurrUsers(privateChatsUsers);
+    console.log(1)
+  } 
  
   return (
     <>
@@ -139,10 +157,28 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
 
         <aside className="users">
           {users.map(user => {
-            return <UserItem name={user.name} _id={user._id} isOnline={user.isOnline} key={user._id} />
+            return (
+              <UserItem 
+                _id={user._id} 
+                key={user._id} 
+                name={user.name}
+                isOnline={user.isOnline} 
+                clickHandler={currentUsersHandler}
+              />
+            )
           })}
         </aside>
       </main>
+
+      <div className="chats">
+        {currUsers.map((user, i) => {
+          if(i < 3) {
+            return <PrivateChat userName={user} clickHandler={closePrivateChat} key={i}/>
+          } else return null;
+        })}
+
+        {currUsers.length > 3 && <div className="messages">More messages....</div>}
+      </div>
     </>
   )
 }

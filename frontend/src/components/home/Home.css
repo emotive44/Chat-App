@@ -46,3 +46,23 @@ main {
   border: 1px solid black;
   margin-right: 1rem;
 }
+
+.chats {
+  width: 80%;
+  height: 35rem;
+  position: fixed;
+  bottom: 0rem;
+  right: 21rem;
+  display: flex;
+  flex-direction: row-reverse;
+  margin-bottom: 0.5rem;
+}
+
+.messages {
+  width: 13rem;
+  height: 3rem;
+  border: 1px solid black;
+  align-self: flex-end;
+  display: flex;
+  align-items: center;
+}
