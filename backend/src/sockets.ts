@@ -14,6 +14,18 @@ interface IMsg {
   text: string;
 }
 
+interface IConnectedUsers {
+  name: string;
+  userId: ObjectId;
+  socketId: string;
+}
+
+// when somebody left, remove him from array with online users!!!
+const reduceOnlineUsers = (socketId: string) => {
+  connectedUsers = connectedUsers.filter((user) => user.socketId !== socketId);
+};
+
+let connectedUsers: IConnectedUsers[] = [];
 export default (server: httpServer): void => {
   const io = new Server(server, {
     cors: { origin: '*' },
@@ -29,7 +41,11 @@ export default (server: httpServer): void => {
       socket.broadcast.emit('hi', username);
     });
 
-    socket.on('someone connect', async () => {
+    socket.on('someone connect', async (userData) => {
+      connectedUsers.push({
+        ...userData,
+        socketId: socket.id,
+      });
       await userStatus(uid, 'connect');
       io.emit('online users', onlineUsers);
     });
@@ -39,16 +55,39 @@ export default (server: httpServer): void => {
       await userStatus(uid, 'disconnect');
       io.emit('online users', onlineUsers - 1);
       socket.broadcast.emit('someone left', username);
+
+      reduceOnlineUsers(socket.id);
     });
 
     socket.on('logout', async () => {
       await userStatus(uid, 'disconnect');
       io.emit('online users', onlineUsers - 1);
       socket.broadcast.emit('someone left', username);
+
+      reduceOnlineUsers(socket.id);
     });
 
     socket.on('public msg', (msg: IMsg) => {
       io.emit('public msg', msg);
     });
+
+    socket.on(
+      'private msg',
+      (receiverId: ObjectId, senderId: ObjectId, msg: string) => {
+        const reciever = [...connectedUsers].filter(
+          (user) => user.userId === receiverId
+        );
+        const sender = [...connectedUsers].filter(
+          (user) => user.userId === senderId
+        );
+
+        const senderName = sender[0] && sender[0].name;
+        const receiverSocketId = reciever[0] && reciever[0].socketId;
+
+        socket
+          .to(receiverSocketId)
+          .emit('private msg', senderName, senderId, msg);
+      }
+    );
   });
 };

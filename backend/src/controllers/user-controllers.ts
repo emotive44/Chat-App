@@ -75,7 +75,7 @@ const login = async (
   }
 
   res.status(200).json({
-    userId: existUser.id,
+    userId: existUser._id,
     name: existUser.name,
   });
 };

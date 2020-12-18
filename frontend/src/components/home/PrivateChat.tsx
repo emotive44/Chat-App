@@ -2,20 +2,31 @@ import React, { FC, useState, useEffect } from 'react';
 import './PrivateChat.css';
 
 import Message from './Message';
+import socket from '../../utils/socketConnection';
 
 
 interface PrivateChatProps {
+  _id: string;
   userName: string;
   clickHandler: Function;
+  commingMsg: IPrivateMsg;
+  setCommingMsg: Function
 }
 
-const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler }) => {
+export interface IPrivateMsg { 
+  text: string;
+  sender: string;
+}
+
+const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler, _id, commingMsg, setCommingMsg }) => {
   const [msg, setMsg] = useState('');
-  const [privateMsgs, setPrivateMsgs] = useState([{text: '', sender: ''}])
+  const [privateMsgs, setPrivateMsgs] = useState<IPrivateMsg[]>([])
+  const myId = localStorage.getItem('uid') || '';
 
   useEffect(() => {
-    setPrivateMsgs([{text: 'hi', sender: userName}])
-  }, [userName])
+    setPrivateMsgs(prev => [...prev, commingMsg]);
+    setCommingMsg('');
+  }, [commingMsg, setCommingMsg]);
 
   const createAvatar = (): string => {
     const curName = userName.split(' ');
@@ -35,13 +46,14 @@ const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler }) => {
     if(!msg) {
       return;
     }
-    
+
     setPrivateMsgs(prev => [
       ...prev,
-      {text: msg, sender: 'Marko Streleshki'}
+      { text: msg, sender: localStorage.getItem('uname') || '' }
     ]);
 
     setMsg('');
+    socket.emit('private msg', _id, myId, msg);
   }
 
   return (
@@ -51,7 +63,7 @@ const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler }) => {
           <span className="chat__avatar">{createAvatar()}</span>
           <span>{userName}</span>
         </div>
-        <button className="chat__close" onClick={() => clickHandler(userName)}>X</button>
+        <button className="chat__close" onClick={() => clickHandler(_id)}>X</button>
       </header>
       <div className="chat__main">
         {privateMsgs.map((msg, i) => {

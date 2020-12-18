@@ -11,7 +11,7 @@ export interface UserItemProps {
 
 const UserItem: FC<UserItemProps> = ({ name, _id, isOnline, clickHandler }) => {
   return (
-    <div className="user-item" onClick={() => clickHandler(name)}>
+    <div className="user-item" onClick={() => clickHandler({ name, _id})}>
       <span>{name}</span>
       <small className={isOnline ? 'online' : ''} />
     </div>

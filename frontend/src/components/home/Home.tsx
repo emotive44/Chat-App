@@ -5,12 +5,17 @@ import socket from '../../utils/socketConnection';
 import './Home.css';
 
 import UserItem, { UserItemProps } from './UserItem';
-import PrivateChat from './PrivateChat';
+import PrivateChat, { IPrivateMsg } from './PrivateChat';
 
 
 interface IMsg {
   userName?: string;
   text: string;
+}
+
+interface ICurrUser {
+  _id: string;
+  name: string;
 }
 
 interface HomeProps {
@@ -23,7 +28,8 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const [fullMsg, setFullMsg] = useState<IMsg>();
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [users, setUsers] = useState<UserItemProps[]>([]);
-  const [currUsers, setCurrUsers] = useState<string[]>([]);
+  const [currUsers, setCurrUsers] = useState<ICurrUser[]>([]);
+  const [commingMsg, setCommingMsg] = useState<IPrivateMsg>({ text: '', sender: '' });
  
   // fetch all users from BE
   const getUsers = async () => {
@@ -54,10 +60,26 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     getUsers();
 
     // if user is already logged in or registered and refresh page, will continue be online
-    if(localStorage.getItem('uname')) {
+    if(localStorage.getItem('uname') && localStorage.getItem('uid') && currUsers.length === 0 && onlineUsers === 0) {
+      let connectedUser = {                                             //make this cheks to stop re-renders
+        userId: localStorage.getItem('uid'),
+        name: localStorage.getItem('uname'),
+      }
+      
       socket.emit('hi');
-      socket.emit('someone connect');
+      socket.emit('someone connect', connectedUser);
     }
+
+    // send private message
+    const privateMsgListener = (senderName: string, senderId: string, msg: string) => {
+      setCommingMsg({ sender: senderName, text: msg });
+      let isExist = currUsers.findIndex(user => user._id === senderId);
+  
+      if(isExist === -1) {
+        setCurrUsers(prev => [...prev, { name: senderName, _id: senderId}]);
+      }
+    }
+    socket.on('private msg', privateMsgListener);
 
     // we create separate listener functions, because we want cleanup after leave page !!!!
     // notify other people that you are joined.
@@ -91,8 +113,9 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
       socket.off('online users', onlineUsersListener);
       socket.off('public msg', publicMsgListener);
       socket.off('someone left', userLeftListener);
+      socket.off('private msg', privateMsgListener);
     }
-  }, []);
+  }, [currUsers, onlineUsers]);
   
   if(!isAuth) {
     return <Redirect to='/login' />
@@ -117,18 +140,32 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   }
 
   // set all users with who write private messages
-  const currentUsersHandler = (userName: string) => {
+  const currentUsersHandler = (user: ICurrUser) => {
     // check if chat with current user is already open!!!!
-    if(currUsers.includes(userName)) {
+    let isExist = false;
+    currUsers.forEach(currUser => {
+      if(currUser.name === user.name) {
+        isExist = true;
+      }
+    });
+
+    if(isExist) {
       return;
     }
-    setCurrUsers(prev => [...prev, userName]);
+    // if(currUsers.includes(user)) {
+    //   return;
+    // }
+    setCurrUsers(prev => [...prev, user]);
   }
 
-  const closePrivateChat = (userName: string) => {
-    const privateChatsUsers = currUsers.filter(user => user !== userName);
-    setCurrUsers(privateChatsUsers);
-    console.log(1)
+  const closePrivateChat = (id: string) => {
+    const privateChatUsers = currUsers.filter(user => {
+      if(user._id !== id) {
+        return user;
+      }
+    });
+
+    setCurrUsers(privateChatUsers);
   } 
  
   return (
@@ -173,7 +210,16 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
       <div className="chats">
         {currUsers.map((user, i) => {
           if(i < 3) {
-            return <PrivateChat userName={user} clickHandler={closePrivateChat} key={i}/>
+            return (
+              <PrivateChat 
+                commingMsg={commingMsg} 
+                setCommingMsg={setCommingMsg} 
+                userName={user.name} 
+                clickHandler={closePrivateChat} 
+                key={i} 
+                _id={user._id} 
+              />
+            )
           } else return null;
         })}
 

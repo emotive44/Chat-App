@@ -39,8 +39,8 @@ const Login: FC<LoginProps> = ({ loginHandler, isAuth }) => {
         'http://localhost:5000/api/v1/users/login',
         JSON.stringify(state),
       );
-
-      socket.emit('someone connect');
+      console.log(res.data)
+      socket.emit('someone connect', res.data);
       socket.emit('hi');
       setStorage(res.data);  
       loginHandler(true);
