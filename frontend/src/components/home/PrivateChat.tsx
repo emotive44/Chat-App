@@ -1,32 +1,25 @@
-import React, { FC, useState, useEffect } from 'react';
+import React, { FC, useState, Dispatch, SetStateAction } from 'react';
 import './PrivateChat.css';
 
 import Message from './Message';
 import socket from '../../utils/socketConnection';
 
+import { IPrivateChat, IPrivateMsg } from './Home';
+
 
 interface PrivateChatProps {
-  _id: string;
+  userId: string;
   userName: string;
-  clickHandler: Function;
-  commingMsg: IPrivateMsg;
-  setCommingMsg: Function
+  msgs: IPrivateMsg[]
+  chats: IPrivateChat[];
+  commingPrChats: Dispatch<SetStateAction<IPrivateChat[]>>;
+  closePrivateChat(id: string): void;
 }
 
-export interface IPrivateMsg { 
-  text: string;
-  sender: string;
-}
-
-const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler, _id, commingMsg, setCommingMsg }) => {
+const PrivateChat: FC<PrivateChatProps> = ({ chats, commingPrChats, msgs, userName, closePrivateChat, userId }) => {
   const [msg, setMsg] = useState('');
-  const [privateMsgs, setPrivateMsgs] = useState<IPrivateMsg[]>([])
   const myId = localStorage.getItem('uid') || '';
-
-  useEffect(() => {
-    setPrivateMsgs(prev => [...prev, commingMsg]);
-    setCommingMsg('');
-  }, [commingMsg, setCommingMsg]);
+  const myName = localStorage.getItem('uname') || '';
 
   const createAvatar = (): string => {
     const curName = userName.split(' ');
@@ -43,17 +36,38 @@ const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler, _id, commin
   }
 
   const sendPrivateMsg = () => {
+    // if message is '', don't send empty message and exit of function
     if(!msg) {
       return;
     }
 
-    setPrivateMsgs(prev => [
-      ...prev,
-      { text: msg, sender: localStorage.getItem('uname') || '' }
-    ]);
-
     setMsg('');
-    socket.emit('private msg', _id, myId, msg);
+
+    let currChat;
+    // check if receiver is the current user, we change receiver to chat.sender 
+    // else we send message to current receiver
+    if(userId === myId) {
+      let receiver;
+      currChat = chats.map((chat: any) => {
+        if(chat.receiver === userId && chat.sender !== myId && chat.userName === userName) {
+          receiver = chat.sender;
+          chat.msgs.push({ text: msg, sender: myName })
+        }
+        return chat;
+      });
+      // if we receiver send message, we send flag = true
+      socket.emit('private msg', receiver, myId, msg, true);
+    } else {
+      currChat = chats.map((chat: any) => {
+        if(chat.receiver === userId && chat.sender === myId) {
+          chat.msgs.push({ text: msg, sender: myName })
+        }
+        return chat;
+      });
+      socket.emit('private msg', userId, myId, msg);
+    }
+  
+    commingPrChats(currChat);
   }
 
   return (
@@ -63,10 +77,10 @@ const PrivateChat: FC<PrivateChatProps> = ({ userName, clickHandler, _id, commin
           <span className="chat__avatar">{createAvatar()}</span>
           <span>{userName}</span>
         </div>
-        <button className="chat__close" onClick={() => clickHandler(_id)}>X</button>
+        <button className="chat__close" onClick={() => closePrivateChat(userId)}>X</button>
       </header>
       <div className="chat__main">
-        {privateMsgs.map((msg, i) => {
+        {msgs.map((msg, i) => {
           return <Message text={msg.text} sender={msg.sender} key={i} />
         })}
       </div>

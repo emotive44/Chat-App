@@ -1,11 +1,11 @@
-import React, { FC, useState, useEffect } from 'react';
+import React, { FC, useState, useEffect, useCallback } from 'react';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import socket from '../../utils/socketConnection';
 import './Home.css';
 
 import UserItem, { UserItemProps } from './UserItem';
-import PrivateChat, { IPrivateMsg } from './PrivateChat';
+import PrivateChat from './PrivateChat';
 
 
 interface IMsg {
@@ -22,30 +22,48 @@ interface HomeProps {
   isAuth: boolean;
 }
 
+export interface IPrivateMsg {
+  text: string;
+  sender: string;
+}
+
+export interface IPrivateChat { 
+  receiver: string;
+  sender: string;
+  msgs: IPrivateMsg[];
+  userName: string;
+}
+
 const Home: FC<HomeProps> = ({ isAuth }) => {
   const [messages, setMessages] = useState<IMsg[]>([]);
   const [msg, setMsg] = useState('');
   const [fullMsg, setFullMsg] = useState<IMsg>();
   const [onlineUsers, setOnlineUsers] = useState(0);
   const [users, setUsers] = useState<UserItemProps[]>([]);
-  const [currUsers, setCurrUsers] = useState<ICurrUser[]>([]);
-  const [commingMsg, setCommingMsg] = useState<IPrivateMsg>({ text: '', sender: '' });
- 
-  // fetch all users from BE
-  const getUsers = async () => {
-    try {
-      const res = await axios.get('http://localhost:5000/api/v1/users');
-      let fetchedUsers = res.data as UserItemProps[];
-      fetchedUsers = fetchedUsers.map(user => {
-        if(user._id === localStorage.getItem('uid')) {
-          user.isOnline = true;
-        }
-        return user;
-      });
+  const [privateChats, setPrivateChats] = useState<IPrivateChat[]>([]);
 
-      setUsers(fetchedUsers);
-    } catch (err) {}
-  }
+  const myId = localStorage.getItem('uid') || '';
+  const myName = localStorage.getItem('uname') || '';
+
+  // fetch all users from BE
+  // useCallback return a memoized version of the callback that only changes if myId dependency has changed.
+  const getUsers = useCallback(
+    async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/v1/users');
+        let fetchedUsers = res.data as UserItemProps[];
+        fetchedUsers = fetchedUsers.map(user => {  
+          if(user._id === myId) {
+            user.isOnline = true;  // here set current user manualy online
+          }
+          return user;
+        });
+
+        setUsers(fetchedUsers);
+      } catch (err) {}
+    },
+    [myId]
+  );
 
   //                             always will scroll to bottom                       //
   useEffect(() => {   
@@ -60,10 +78,10 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     getUsers();
 
     // if user is already logged in or registered and refresh page, will continue be online
-    if(localStorage.getItem('uname') && localStorage.getItem('uid') && currUsers.length === 0 && onlineUsers === 0) {
-      let connectedUser = {                                             //make this cheks to stop re-renders
-        userId: localStorage.getItem('uid'),
-        name: localStorage.getItem('uname'),
+    if(myId && myName && privateChats.length === 0 && onlineUsers === 0) { //make this cheks to stop re-renders
+      let connectedUser = {
+        userId: myId,
+        name: myName,
       }
       
       socket.emit('hi');
@@ -71,13 +89,34 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     }
 
     // send private message
-    const privateMsgListener = (senderName: string, senderId: string, msg: string) => {
-      setCommingMsg({ sender: senderName, text: msg });
-      let isExist = currUsers.findIndex(user => user._id === senderId);
-  
+    const privateMsgListener = (senderName: string, senderId: string, msg: string, receiverId: string) => {
+      const isExist = privateChats.findIndex(chat => chat.receiver === receiverId && chat.sender === senderId);
+      
+      // chek if the current chat is already exist, and if is not, we created it
       if(isExist === -1) {
-        setCurrUsers(prev => [...prev, { name: senderName, _id: senderId}]);
+        const privateChat = {} as IPrivateChat;
+        privateChat.receiver = receiverId;
+
+        if(privateChat.msgs === undefined) {
+          privateChat.msgs = [{ sender: senderName, text: msg }]
+        }
+        privateChat.userName = senderName;
+        privateChat.sender = senderId;
+
+        setPrivateChats(prev => [...prev, privateChat])
+      } else {
+        // if is already exist, we found it and put new messages inside
+        const chats = privateChats.map(chat => {
+          if(chat.receiver === receiverId && chat.sender === senderId) {
+            chat.msgs = [...chat.msgs, { sender: senderName, text: msg }]
+          }
+          return chat;
+        })
+
+        setPrivateChats(chats);
       }
+    
+      // ///////////////////////////////////////
     }
     socket.on('private msg', privateMsgListener);
 
@@ -115,7 +154,7 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
       socket.off('someone left', userLeftListener);
       socket.off('private msg', privateMsgListener);
     }
-  }, [currUsers, onlineUsers]);
+  }, [onlineUsers, privateChats, getUsers, myName, myId]);
   
   if(!isAuth) {
     return <Redirect to='/login' />
@@ -143,8 +182,9 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
   const currentUsersHandler = (user: ICurrUser) => {
     // check if chat with current user is already open!!!!
     let isExist = false;
-    currUsers.forEach(currUser => {
-      if(currUser.name === user.name) {
+    privateChats.forEach(chat => {
+      // chek when somebody is send message to you. You can not open the second chat with him
+      if(chat.receiver === user._id || chat.receiver === myId) {
         isExist = true;
       }
     });
@@ -152,20 +192,13 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
     if(isExist) {
       return;
     }
-    // if(currUsers.includes(user)) {
-    //   return;
-    // }
-    setCurrUsers(prev => [...prev, user]);
+
+    setPrivateChats(prev => [...prev, {receiver: user._id, sender: myId,  msgs: [], userName: user.name }])
   }
 
   const closePrivateChat = (id: string) => {
-    const privateChatUsers = currUsers.filter(user => {
-      if(user._id !== id) {
-        return user;
-      }
-    });
-
-    setCurrUsers(privateChatUsers);
+    const reducedPrivateChats = privateChats.filter(chat => chat.receiver !== id);
+    setPrivateChats(reducedPrivateChats);
   } 
  
   return (
@@ -208,22 +241,25 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
       </main>
 
       <div className="chats">
-        {currUsers.map((user, i) => {
+        {privateChats.map((chat, i) => {
           if(i < 3) {
             return (
               <PrivateChat 
-                commingMsg={commingMsg} 
-                setCommingMsg={setCommingMsg} 
-                userName={user.name} 
-                clickHandler={closePrivateChat} 
-                key={i} 
-                _id={user._id} 
+                key={i}
+                msgs={chat.msgs}
+                chats={privateChats}
+                userId={chat.receiver}
+                userName={chat.userName}
+                commingPrChats={setPrivateChats}
+                closePrivateChat={closePrivateChat}
               />
-            )
-          } else return null;
+            );
+          } else {
+            return null;
+          }
         })}
 
-        {currUsers.length > 3 && <div className="messages">More messages....</div>}
+        {privateChats.length > 3 && <div className="messages">More messages....</div>}
       </div>
     </>
   )

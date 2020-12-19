@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Server, Socket } from 'socket.io';
 import { Server as httpServer } from 'http';
 import { ObjectId } from 'mongoose';
@@ -73,20 +74,22 @@ export default (server: httpServer): void => {
 
     socket.on(
       'private msg',
-      (receiverId: ObjectId, senderId: ObjectId, msg: string) => {
-        const reciever = [...connectedUsers].filter(
-          (user) => user.userId === receiverId
-        );
-        const sender = [...connectedUsers].filter(
-          (user) => user.userId === senderId
-        );
+      (receiverId: ObjectId, senderId: ObjectId, msg: string, flag: boolean) => {
+        // find reciever and sender without mutate connectedUsers [....]
+        const reciever = [...connectedUsers].filter((user) => user.userId === receiverId);
+        const sender = [...connectedUsers].filter((user) => user.userId === senderId);
 
         const senderName = sender[0] && sender[0].name;
         const receiverSocketId = reciever[0] && reciever[0].socketId;
 
-        socket
-          .to(receiverSocketId)
-          .emit('private msg', senderName, senderId, msg);
+        // chek if flag is false :
+        // sender send to receiver
+        // else receiver send message to previous sender
+        if (!flag) {
+          socket.to(receiverSocketId).emit('private msg', senderName, senderId, msg, receiverId);
+        } else {
+          socket.to(receiverSocketId).emit('private msg', senderName, receiverId, msg, senderId);
+        }
       }
     );
   });
