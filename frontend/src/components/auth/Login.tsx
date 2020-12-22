@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react'
 import { Redirect, useHistory } from "react-router-dom";
-import './Form.css';
+
+import { FormWrapper, Button } from './Form.styles';
 
 import axios from 'axios';
 import InputGroup from '../common/InputGroup';
@@ -49,7 +50,7 @@ const Login: FC<LoginProps> = ({ loginHandler, isAuth }) => {
   }
 
   return (
-    <section className="form-wrapper">
+    <FormWrapper>
       <InputGroup 
         label='Email' 
         type='email' 
@@ -62,8 +63,8 @@ const Login: FC<LoginProps> = ({ loginHandler, isAuth }) => {
         value={state.password}
         onChange={inputChangeHandler}
       />
-      <button onClick={submitHandler}>Login</button>
-    </section>
+      <Button onClick={submitHandler}>Login</Button>
+    </FormWrapper>
   )
 }
 

@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import './InputGroup.css';
+
+import { InputContainer } from './InputGroup.styles';
 
 interface InputGroupProps {
   label: string;
@@ -11,10 +12,10 @@ interface InputGroupProps {
 const InputGroup: FC<InputGroupProps> = ({ label, type, value, onChange }) => {
   const labelTLC = label.toLowerCase();
   return (
-    <div className='input-group'>
+    <InputContainer>
       <label htmlFor={labelTLC}>Your {label}</label>
       <input type={type} id={labelTLC} name={labelTLC} value={value} onChange={onChange} />
-    </div>
+    </InputContainer>
   )
 }
 

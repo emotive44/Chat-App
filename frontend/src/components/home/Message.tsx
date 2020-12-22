@@ -1,5 +1,7 @@
 import React, { FC } from 'react';
-import './Message.css';
+// import './Message.css';
+
+import { MessageContainer, MessageSender } from './Message.styles'
 
 interface MessageProps {
   text: string;
@@ -13,10 +15,10 @@ const Message: FC<MessageProps> = ({ text, sender }) => {
   }
 
   return (
-    <p className={messageClasses.join(' ')}>
+    <MessageContainer isMe={sender === localStorage.getItem('uname') ? true : false} >
       {text}
-      <span className="message__sender">{sender}</span>
-    </p>
+      <MessageSender>{sender}</MessageSender>
+    </MessageContainer>
   )
 }
 

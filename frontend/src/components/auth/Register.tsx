@@ -1,6 +1,7 @@
 import React, { FC, useState } from 'react';
-import { Link, useHistory, Redirect } from 'react-router-dom';
-import './Form.css';
+import { useHistory, Redirect } from 'react-router-dom';
+
+import { FormWrapper, Button, CustomLink } from './Form.styles';
 
 import axios from 'axios';
 import setStorage from '../../utils/setStorage';
@@ -50,7 +51,7 @@ const Register:FC<RegisterProps> = ({ loginHandler, isAuth }) => {
   }
 
   return (
-    <section className="form-wrapper" style={{ height: '29rem' }}>
+    <FormWrapper registerStyles>
       <InputGroup 
         label='Name' 
         type='text' 
@@ -69,13 +70,11 @@ const Register:FC<RegisterProps> = ({ loginHandler, isAuth }) => {
         value={state.password}
         onChange={inputChangeHandler}
       />
-      <button onClick={submitHandler}>Register</button>
-      <p>
-        <Link to='/login'>
-          If you have account go to Login.
-        </Link>
-      </p>
-    </section>
+      <Button onClick={submitHandler}>Register</Button>
+      <CustomLink to='/login'>
+        if you have account go to Login.
+      </CustomLink>
+    </FormWrapper>
   )
 }
 

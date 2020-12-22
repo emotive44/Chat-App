@@ -1,5 +1,6 @@
 import React, { FC } from 'react';
-import './UserItem.css';
+
+import { User, UserName, UserStatus } from './UserItem.styles';
 
 
 export interface UserItemProps {
@@ -11,10 +12,10 @@ export interface UserItemProps {
 
 const UserItem: FC<UserItemProps> = ({ name, _id, isOnline, clickHandler }) => {
   return (
-    <div className="user-item" onClick={() => clickHandler({ name, _id})}>
-      <span>{name}</span>
-      <small className={isOnline ? 'online' : ''} />
-    </div>
+    <User onClick={() => clickHandler({ name, _id})}>
+      <UserName>{name}</UserName>
+      <UserStatus isOnline={isOnline} />
+    </User>
   )
 }
 

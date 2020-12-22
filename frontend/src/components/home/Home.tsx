@@ -2,8 +2,20 @@ import React, { FC, useState, useEffect, useCallback } from 'react';
 import { Redirect } from 'react-router-dom';
 import axios from 'axios';
 import socket from '../../utils/socketConnection';
-import './Home.css';
 
+import { 
+  MainHome, 
+  MoreMsgs, 
+  MsgCreator, 
+  UsersOnline, 
+  ChatsContainer,
+  PublicChatForm, 
+  UsersContainer, 
+  PublicChatTitle, 
+  PublicChatSection, 
+  PublicChatComments, 
+} from './Home.styles';
+ 
 import UserItem, { UserItemProps } from './UserItem';
 import PrivateChat from './PrivateChat';
 
@@ -203,29 +215,27 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
  
   return (
     <>
-      <div className="online-users">
-        <p>Online Users: {onlineUsers}</p>
-      </div>
+      <UsersOnline>Online Users: {onlineUsers}</UsersOnline>
 
-      <main>
-        <section className='public-chat'>
-          <p className="public-chat__title">Public Chat For All Users</p>
-          <div className="public-chat__form">
+      <MainHome>
+        <PublicChatSection>
+          <PublicChatTitle>Public Chat For All Users</PublicChatTitle>
+          <PublicChatForm>
             <input type="text" value={msg} onChange={msgHandler} />
             <button onClick={publicComment}>Public Comment</button>
-          </div>
-          <div className="public-chat__comments">
+          </PublicChatForm>
+          <PublicChatComments>
             {messages.map((msg, i) => {
               return <p key={i}>
-                {msg.userName && <span className='bold'>{msg.userName}: </span>}
+                {msg.userName && <MsgCreator>{msg.userName}: </MsgCreator>}
                 {' '}
                 <span>{msg.text}</span>
               </p>
             })}
-          </div>
-        </section>
+          </PublicChatComments>
+        </PublicChatSection>
 
-        <aside className="users">
+        <UsersContainer>
           {users.map(user => {
             return (
               <UserItem 
@@ -237,10 +247,10 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
               />
             )
           })}
-        </aside>
-      </main>
+        </UsersContainer>
+      </MainHome>
 
-      <div className="chats">
+      <ChatsContainer>
         {privateChats.map((chat, i) => {
           if(i < 3) {
             return (
@@ -259,8 +269,8 @@ const Home: FC<HomeProps> = ({ isAuth }) => {
           }
         })}
 
-        {privateChats.length > 3 && <div className="messages">More messages....</div>}
-      </div>
+        {privateChats.length > 3 && <MoreMsgs>More messages....</MoreMsgs>}
+      </ChatsContainer>
     </>
   )
 }
